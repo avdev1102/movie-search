@@ -4,6 +4,8 @@ import Filters from "./components/Filters";
 import MovieList from "./components/MovieList";
 import Pagination from "./components/Pagination";
 import LoadingSpinner from "./components/LoadingSpinner";
+import DarkModeToggle from "./components/DarkModeToggle";
+import { useTheme } from "./contexts/ThemeContext";
 
 const App = () => {
   const [movies, setMovies] = useState([]);
@@ -16,6 +18,9 @@ const App = () => {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Use the theme context
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     const fetchGenres = async () => {
@@ -46,59 +51,63 @@ const App = () => {
         console.error("Error fetching watch providers:", error);
       }
     };
-  
+
     fetchWatchProviders();
   }, []);
 
-  //fetch data for search query, filter by genre/provider
+  // Fetch data for search query, filter by genre/provider
   const handleSearch = async (query, page = 1) => {
     if (!query && !selectedGenre && !selectedProvider) {
       alert("Please enter a search term or select a genre and provider.");
       return;
     }
-  
-    setIsLoading(true); 
+
+    setIsLoading(true);
     setError(null);
 
     try {
       let data;
-      const response = await fetch(`/api/search?query=${query}&page=${page}&genre=${selectedGenre}&provider=${selectedProvider}`);
+      const response = await fetch(
+        `/api/search?query=${query}&page=${page}&genre=${selectedGenre}&provider=${selectedProvider}`
+      );
       data = await response.json();
 
-      if(data.error){
+      if (data.error) {
         setError(data.error);
       } else {
         // Filter movies by selected genre and provider (only if search query is used)
-        if(query){
+        if (query) {
           const filteredMovies = data.results.filter((movie) => {
-        
             const matchesGenre =
               !selectedGenre || movie.genre_ids.includes(Number(selectedGenre));
-            
+
             const providers = Object.values(movie.watch_providers).flat();
-        
+
             const matchesProvider =
-              !selectedProvider || providers.some(provider => provider.provider_id === Number(selectedProvider));
-  
-            //filter out unreleased movies
+              !selectedProvider ||
+              providers.some((provider) => provider.provider_id === Number(selectedProvider));
+
+            // Filter out unreleased movies
             const unreleased = movie.release_date === "" ? false : true;
-              
+
             return matchesGenre && matchesProvider && unreleased;
           });
-
+          
           setMovies(filteredMovies);
+          setTotalPages(data.total_pages);
+          setCurrentPage(page);
         } else {
           setMovies(data.results);
-        }  
-        setTotalPages(data.total_pages)
-        setCurrentPage(page);
+          setTotalPages(data.total_pages);
+          setCurrentPage(page);
+        }
+        
       }
       console.log(data);
-        
     } catch (error) {
       setError(error.message);
-    } finally{
-      setIsLoading(false); 
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -106,10 +115,12 @@ const App = () => {
     handleSearch(query, page);
   };
 
-  
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Movie Search</h1>
+    <div className={`p-4 min-h-screen ${isDarkMode ? "bg-gray-900 text-gray-100" : "bg-white text-gray-900"}`}>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Movie Search</h1>
+        <DarkModeToggle />
+      </div>
       <SearchBar onSearch={(query) => { setQuery(query); handleSearch(query, 1); }} />
       <Filters
         genres={genres}

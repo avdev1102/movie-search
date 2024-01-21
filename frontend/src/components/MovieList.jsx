@@ -1,7 +1,8 @@
 import React from "react";
+import { useTheme } from "../contexts/ThemeContext"; // Import the useTheme hook
 
 const MovieList = ({ movies }) => {
-  // Define the order of watch provider types
+  const { isDarkMode } = useTheme(); // Use the theme context
   const providerTypes = ["flatrate", "rent", "buy", "free", "ads"];
 
   return (
@@ -10,7 +11,9 @@ const MovieList = ({ movies }) => {
         movies.map((movie) => (
           <div
             key={movie.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+            className={`rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 ${
+              isDarkMode ? "bg-gray-800" : "bg-white"
+            }`}
           >
             {/* Movie Poster */}
             {movie.poster_path && (
@@ -22,17 +25,21 @@ const MovieList = ({ movies }) => {
             )}
             <div className="p-4">
               {/* Movie Title and Release Year */}
-              <h2 className="text-xl font-semibold">
+              <h2 className={`text-xl font-semibold ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
                 {movie.title}{" "}
-                <span className="text-gray-500">
+                <span className={isDarkMode ? "text-gray-400" : "text-gray-500"}>
                   ({movie.release_date ? movie.release_date.split("-")[0] : "N/A"}) Rating: {movie.vote_average}
                 </span>
               </h2>
               {/* Movie Overview */}
-              <p className="text-gray-600 mt-2 ">{movie.overview}</p>
+              <p className={`mt-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                {movie.overview}
+              </p>
               {/* Watch Providers */}
               <div className="mt-4">
-                <h3 className="font-semibold mb-2">Watch Providers:</h3>
+                <h3 className={`font-semibold mb-2 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
+                  Watch Providers:
+                </h3>
                 {movie.watch_providers && (
                   <div className="space-y-3">
                     {providerTypes.map((type) => {
@@ -40,21 +47,25 @@ const MovieList = ({ movies }) => {
                       if (providers && providers.length > 0) {
                         return (
                           <div key={type}>
-                            <h4 className="font-medium capitalize text-sm text-gray-700">
-                              {type == 'flatrate' ? 'Stream' : type}:
+                            <h4 className={`font-medium capitalize text-sm ${isDarkMode ? "text-gray-400" : "text-gray-700"}`}>
+                              {type === "flatrate" ? "Stream" : type}:
                             </h4>
                             <div className="flex flex-wrap gap-2 mt-1">
                               {providers.map((provider) => (
                                 <div
                                   key={provider.provider_id}
-                                  className="flex items-center bg-gray-100 rounded-lg p-2"
+                                  className={`flex items-center rounded-lg p-2 ${
+                                    isDarkMode ? "bg-gray-700" : "bg-gray-100"
+                                  }`}
                                 >
                                   <img
                                     src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
                                     alt={provider.provider_name}
                                     className="w-6 h-6 rounded"
                                   />
-                                  <span className="ml-2 text-sm">{provider.provider_name}</span>
+                                  <span className={`ml-2 text-sm ${isDarkMode ? "text-gray-200" : "text-gray-900"}`}>
+                                    {provider.provider_name}
+                                  </span>
                                 </div>
                               ))}
                             </div>
@@ -70,7 +81,9 @@ const MovieList = ({ movies }) => {
           </div>
         ))
       ) : (
-        <p className="text-gray-600 col-span-full text-center">No movies found.</p>
+        <p className={`text-center col-span-full ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+          No movies found.
+        </p>
       )}
     </div>
   );
